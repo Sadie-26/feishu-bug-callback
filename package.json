@@ -4,6 +4,8 @@
   "description": "飞书 Bug 追踪卡片按钮回调服务",
   "main": "api/callback.js",
   "dependencies": {
-    "axios": "^1.6.0"
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0"
   }
 }
+
