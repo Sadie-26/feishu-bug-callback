@@ -74,55 +74,59 @@ async function writeRecord(token, bugData) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ msg: 'Method not allowed' });
+  // 飞书验证挑战（GET 请求）
+  if (req.method === 'GET' && req.query.challenge) {
+    return res.status(200).send(req.query.challenge);
   }
 
-  const body = req.body;
+  // POST 请求处理
+  if (req.method === 'POST') {
+    const body = req.body;
 
-  // 飞书验证挑战（首次配置时）
-  if (body.challenge) {
-    return res.status(200).json({ challenge: body.challenge });
-  }
-
-  // 处理卡片按钮点击事件
-  if (body.type === 'card.action.trigger') {
-    const action = body.action;
-    const chatId = body.open_chat_id;
-    const actionValue = action?.value ? JSON.parse(action.value) : {};
-    const bugData = actionValue.bugData || {};
-
-    try {
-      const token = await getAccessToken();
-
-      if (actionValue.action === 'confirm') {
-        // 确认写入
-        await writeRecord(token, bugData);
-        await sendMessage(token, chatId, `✅ Bug 已写入多维表格！\n描述：${bugData.description}`);
-
-      } else if (actionValue.action === 'edit') {
-        // 编辑 - 发送编辑引导卡片
-        await sendEditCard(token, chatId, bugData);
-
-      } else if (actionValue.action === 'merge') {
-        await sendMessage(token, chatId, `📝 已合并描述到已有记录 #${actionValue.targetId}`);
-
-      } else if (actionValue.action === 'link') {
-        await sendMessage(token, chatId, `🔗 已关联为相关 Bug #${actionValue.targetId}`);
-
-      } else if (actionValue.action === 'link_existing') {
-        await sendMessage(token, chatId, `🔗 已关联到已有记录 #${actionValue.targetId}`);
-
-      } else if (actionValue.action === 'cancel') {
-        await sendMessage(token, chatId, `已取消本次 Bug 提交`);
-      }
-
-    } catch (err) {
-      console.error('处理按钮事件失败:', err.response?.data || err.message);
-      return res.status(500).json({ msg: 'Internal error' });
+    // 飞书验证挑战（POST 请求）
+    if (body.challenge) {
+      return res.status(200).json({ challenge: body.challenge });
     }
 
-    return res.status(200).json({ msg: 'success' });
+    // 处理卡片按钮点击事件
+    if (body.type === 'card.action.trigger') {
+      const action = body.action;
+      const chatId = body.open_chat_id;
+      const actionValue = action?.value ? JSON.parse(action.value) : {};
+      const bugData = actionValue.bugData || {};
+
+      try {
+        const token = await getAccessToken();
+
+        if (actionValue.action === 'confirm') {
+          // 确认写入
+          await writeRecord(token, bugData);
+          await sendMessage(token, chatId, `✅ Bug 已写入多维表格！\n描述：${bugData.description}`);
+
+        } else if (actionValue.action === 'edit') {
+          // 编辑 - 发送编辑引导卡片
+          await sendEditCard(token, chatId, bugData);
+
+        } else if (actionValue.action === 'merge') {
+          await sendMessage(token, chatId, `📝 已合并描述到已有记录 #${actionValue.targetId}`);
+
+        } else if (actionValue.action === 'link') {
+          await sendMessage(token, chatId, `🔗 已关联为相关 Bug #${actionValue.targetId}`);
+
+        } else if (actionValue.action === 'link_existing') {
+          await sendMessage(token, chatId, `🔗 已关联到已有记录 #${actionValue.targetId}`);
+
+        } else if (actionValue.action === 'cancel') {
+          await sendMessage(token, chatId, `已取消本次 Bug 提交`);
+        }
+
+      } catch (err) {
+        console.error('处理按钮事件失败:', err.response?.data || err.message);
+        return res.status(500).json({ msg: 'Internal error' });
+      }
+
+      return res.status(200).json({ msg: 'success' });
+    }
   }
 
   return res.status(200).json({ msg: 'ok' });
