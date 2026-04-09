@@ -43,7 +43,6 @@ async function uploadMaterial(token, fileBuffer, fileName, fileType = 'image') {
 
 // 从图片Key获取file_token（通过飞书消息图片）
 async function getImageTokenFromMessage(token, imageKey) {
-  // 获取图片临时下载链接
   const res = await axios.get(
     `${API_BASE}/im/v1/images/${imageKey}`,
     {
@@ -56,12 +55,10 @@ async function getImageTokenFromMessage(token, imageKey) {
     return null;
   }
 
-  // 下载图片
   const imageRes = await axios.get(res.data.data.temp_url, { responseType: 'arraybuffer' });
   const ext = imageRes.headers['content-type']?.includes('png') ? '.png' : '.jpg';
   const fileName = `bug_${Date.now()}${ext}`;
 
-  // 上传并获取token
   return uploadMaterial(token, imageRes.data, fileName, 'image');
 }
 
@@ -120,7 +117,6 @@ async function writeRecord(token, bugData) {
     '状态': { text: '待处理' }
   };
 
-  // 如果有附件，添加到"截图或视频"字段
   if (bugData.attachments && bugData.attachments.length > 0) {
     fields['截图或视频'] = bugData.attachments.map(token => ({ file_token: token }));
   }
@@ -134,21 +130,17 @@ async function writeRecord(token, bugData) {
 }
 
 export default async function handler(req, res) {
-  // 飞书验证挑战（GET 请求）
   if (req.method === 'GET' && req.query.challenge) {
     return res.status(200).send(req.query.challenge);
   }
 
-  // POST 请求处理
   if (req.method === 'POST') {
     const body = req.body;
 
-    // 飞书验证挑战（POST 请求）
     if (body.challenge) {
       return res.status(200).json({ challenge: body.challenge });
     }
 
-    // 处理卡片按钮点击事件
     if (body.type === 'card.action.trigger') {
       const action = body.action;
       const chatId = body.open_chat_id;
@@ -159,7 +151,6 @@ export default async function handler(req, res) {
       try {
         const token = await getAccessToken();
 
-        // 获取用户显示名称
         let userName = userId;
         try {
           const userRes = await axios.get(
@@ -170,12 +161,23 @@ export default async function handler(req, res) {
         } catch (e) {}
 
         if (actionValue.action === 'confirm') {
-          // 确认写入
-          await writeRecord(token, bugData);
+          // 处理截图上传
+          let attachments = [];
+          if (bugData.imageKeys && bugData.imageKeys.length > 0) {
+            for (const imageKey of bugData.imageKeys) {
+              try {
+                const fileToken = await getImageTokenFromMessage(token, imageKey);
+                if (fileToken) attachments.push(fileToken);
+              } catch (e) {
+                console.error('上传图片失败:', imageKey, e.message);
+              }
+            }
+          }
+          
+          await writeRecord(token, { ...bugData, attachments });
           await sendMessage(token, chatId, `✅ 用户 [${userName}] 点击了「确认写入」\nBug 已写入多维表格！\n描述：${bugData.description}`);
 
         } else if (actionValue.action === 'edit') {
-          // 编辑 - 发送编辑引导卡片
           await sendMessage(token, chatId, `📝 用户 [${userName}] 点击了「编辑」`);
           await sendEditCard(token, chatId, bugData);
 
