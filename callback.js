@@ -93,20 +93,10 @@ async function sendEditCard(token, chatId, bugData) {
       template: 'grey'
     },
     elements: [
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**Bug 描述：**' }
-      },
-      {
-        tag: 'textarea',
-        placeholder: '输入 Bug 描述',
-        value: bugData.description || ''
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**Bug 描述：**' } },
+      { tag: 'textarea', placeholder: '输入 Bug 描述', value: bugData.description || '' },
       { tag: 'hr' },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**优先级：**' }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**优先级：**' } },
       {
         tag: 'select_static',
         options: [
@@ -117,10 +107,7 @@ async function sendEditCard(token, chatId, bugData) {
         value: bugData.priority || '中'
       },
       { tag: 'hr' },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**终端：**' }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**终端：**' } },
       {
         tag: 'select_static',
         options: [
@@ -132,10 +119,7 @@ async function sendEditCard(token, chatId, bugData) {
         value: bugData.terminal || ''
       },
       { tag: 'hr' },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**功能模块：**' }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**功能模块：**' } },
       {
         tag: 'select_static',
         options: [
@@ -155,24 +139,8 @@ async function sendEditCard(token, chatId, bugData) {
       {
         tag: 'action',
         actions: [
-          {
-            tag: 'button',
-            text: { tag: 'plain_text', content: '❌ 取消' },
-            type: 'default',
-            value: JSON.stringify({
-              action: 'cancel',
-              bugData: bugData
-            })
-          },
-          {
-            tag: 'button',
-            text: { tag: 'plain_text', content: '✅ 确认写入' },
-            type: 'primary',
-            value: JSON.stringify({
-              action: 'confirm',
-              bugData: bugData
-            })
-          }
+          { tag: 'button', text: { tag: 'plain_text', content: '❌ 取消' }, type: 'default', value: JSON.stringify({ action: 'cancel', bugData: bugData }) },
+          { tag: 'button', text: { tag: 'plain_text', content: '✅ 确认写入' }, type: 'primary', value: JSON.stringify({ action: 'confirm', bugData: bugData }) }
         ]
       }
     ]
@@ -192,15 +160,13 @@ async function writeRecord(token, bugData, attachments = []) {
   };
 
   if (attachments.length > 0) {
-    fields['截图或视频'] = attachments.map(token => ({ file_token: token }));
+    fields['截图或视频'] = attachments.map(t => ({ file_token: t }));
   }
 
   const response = await axios.post(
     `${API_BASE}/bitable/v1/apps/${BITABLE_APP_TOKEN}/tables/${BITABLE_TABLE_ID}/records`,
     { fields },
-    {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }
+    { headers: { 'Authorization': `Bearer ${token}` } }
   );
 
   return response.data.data.record;
@@ -219,11 +185,7 @@ async function appendToRecord(token, targetId, newDescription) {
 
     await axios.put(
       `${API_BASE}/bitable/v1/apps/${BITABLE_APP_TOKEN}/tables/${BITABLE_TABLE_ID}/records/${targetId}`,
-      {
-        fields: {
-          'Bug 描述': updatedDescription
-        }
-      },
+      { fields: { 'Bug 描述': updatedDescription } },
       { headers: { 'Authorization': `Bearer ${token}` } }
     );
 
@@ -261,56 +223,21 @@ async function getRecordDetail(token, targetId) {
 async function sendViewCard(token, chatId, record, newBugData) {
   const card = {
     config: { wide_screen_mode: true },
-    header: {
-      title: { tag: 'plain_text', content: `📋 已有记录 #${record.id}` },
-      template: 'blue'
-    },
+    header: { title: { tag: 'plain_text', content: `📋 已有记录 #${record.id}` }, template: 'blue' },
     elements: [
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**已有 Bug 描述：**' }
-      },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: record.description }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**已有 Bug 描述：**' } },
+      { tag: 'div', text: { tag: 'lark_md', content: record.description } },
       { tag: 'hr' },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: `功能模块：${record.module}\n终端：${record.terminal}\n优先级：${record.priority}\n状态：${record.status}` }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: `功能模块：${record.module}\n终端：${record.terminal}\n优先级：${record.priority}\n状态：${record.status}` } },
       { tag: 'hr' },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: '**你想提交的新问题：**' }
-      },
-      {
-        tag: 'div',
-        text: { tag: 'lark_md', content: newBugData.description }
-      },
+      { tag: 'div', text: { tag: 'lark_md', content: '**你想提交的新问题：**' } },
+      { tag: 'div', text: { tag: 'lark_md', content: newBugData.description } },
       { tag: 'hr' },
       {
         tag: 'action',
         actions: [
-          {
-            tag: 'button',
-            text: { tag: 'plain_text', content: '➕ 追加到已有' },
-            type: 'primary',
-            value: JSON.stringify({
-              action: 'append',
-              targetId: record.id,
-              bugData: newBugData
-            })
-          },
-          {
-            tag: 'button',
-            text: { tag: 'plain_text', content: '📄 新建独立记录' },
-            type: 'default',
-            value: JSON.stringify({
-              action: 'confirm',
-              bugData: newBugData
-            })
-          }
+          { tag: 'button', text: { tag: 'plain_text', content: '➕ 追加到已有' }, type: 'primary', value: JSON.stringify({ action: 'append', targetId: record.id, bugData: newBugData }) },
+          { tag: 'button', text: { tag: 'plain_text', content: '📄 新建独立记录' }, type: 'default', value: JSON.stringify({ action: 'confirm', bugData: newBugData }) }
         ]
       }
     ]
@@ -319,10 +246,61 @@ async function sendViewCard(token, chatId, record, newBugData) {
   await sendCard(token, chatId, card);
 }
 
+// 生成预览卡片
+function createPreviewCard(bugData) {
+  const priorityEmoji = { '高': '🔴', '中': '🟡', '低': '⚪' };
+
+  return {
+    config: { wide_screen_mode: true },
+    header: { title: { tag: 'plain_text', content: `🩺 ${bugData.module || 'Bug'} - Bug 确认` }, template: 'blue' },
+    elements: [
+      { tag: 'div', text: { tag: 'lark_md', content: '**Bug 描述：**' } },
+      { tag: 'div', text: { tag: 'lark_md', content: bugData.description || '' } },
+      { tag: 'hr' },
+      { tag: 'div', text: { tag: 'lark_md', content: `优先级：${priorityEmoji[bugData.priority] || '🟡'}${bugData.priority || '中'}\n终端：${bugData.terminal || '待确认'}\n功能模块：${bugData.module || '待确认'}` } },
+      { tag: 'hr' },
+      {
+        tag: 'action',
+        actions: [
+          { tag: 'button', text: { tag: 'plain_text', content: '✏️ 编辑' }, type: 'default', value: JSON.stringify({ action: 'edit', bugData: bugData }) },
+          { tag: 'button', text: { tag: 'plain_text', content: '✅ 确认写入' }, type: 'primary', value: JSON.stringify({ action: 'confirm', bugData: bugData }) }
+        ]
+      }
+    ]
+  };
+}
+
+// 发送预览卡片（供 WorkBuddy 调用）
+async function handlePreviewRequest(req, res) {
+  try {
+    const { chatId, bugData } = req.body;
+
+    if (!chatId || !bugData) {
+      return res.status(400).json({ error: '缺少 chatId 或 bugData' });
+    }
+
+    const token = await getAccessToken();
+    const card = createPreviewCard(bugData);
+    const result = await sendCard(token, chatId, card);
+
+    console.log('预览卡片已发送:', { chatId, bugData, result });
+    return res.json({ success: true, message_id: result.data?.message_id });
+  } catch (error) {
+    console.error('发送预览卡片失败:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
 // 主处理函数
 export default async function handler(req, res) {
+  // 处理飞书验证挑战
   if (req.method === 'GET' && req.query.challenge) {
     return res.json({ challenge: req.query.challenge });
+  }
+
+  // 处理 /api/preview 请求（来自 WorkBuddy）
+  if (req.url === '/api/preview' && req.method === 'POST') {
+    return handlePreviewRequest(req, res);
   }
 
   if (req.method !== 'POST') {
@@ -340,8 +318,8 @@ export default async function handler(req, res) {
 
     const message = event.message;
     const chatId = event.chat_id;
-    const sender = event.sender;
 
+    // 处理卡片按钮回调
     if (message.msg_type === 'interactive' && body.action) {
       const action = body.action;
       const value = JSON.parse(body.value || '{}');
@@ -357,12 +335,9 @@ export default async function handler(req, res) {
           if (bugData.imageKeys && bugData.imageKeys.length > 0) {
             for (const imageKey of bugData.imageKeys) {
               const fileToken = await getImageTokenFromMessage(token, imageKey, messageId);
-              if (fileToken) {
-                attachments.push(fileToken);
-              }
+              if (fileToken) attachments.push(fileToken);
             }
           }
-
           const record = await writeRecord(token, bugData, attachments);
           await sendMessage(token, chatId, `✅ Bug 已写入！记录 ID: ${record.record_id}`);
           break;
@@ -370,22 +345,15 @@ export default async function handler(req, res) {
         case 'append':
           if (targetId) {
             const success = await appendToRecord(token, targetId, bugData.description);
-            if (success) {
-              await sendMessage(token, chatId, `✅ 已追加到记录 #${targetId}`);
-            } else {
-              await sendMessage(token, chatId, `❌ 追加失败，请重试`);
-            }
+            await sendMessage(token, chatId, success ? `✅ 已追加到记录 #${targetId}` : `❌ 追加失败`);
           }
           break;
 
         case 'view':
           if (targetId) {
             const record = await getRecordDetail(token, targetId);
-            if (record) {
-              await sendViewCard(token, chatId, record, bugData);
-            } else {
-              await sendMessage(token, chatId, `❌ 无法获取记录详情`);
-            }
+            if (record) await sendViewCard(token, chatId, record, bugData);
+            else await sendMessage(token, chatId, `❌ 无法获取记录详情`);
           }
           break;
 
@@ -396,9 +364,6 @@ export default async function handler(req, res) {
         case 'cancel':
           await sendMessage(token, chatId, `❌ 已取消操作`);
           break;
-
-        default:
-          console.log('未知 action:', action);
       }
     }
 
